@@ -21,13 +21,10 @@ from functions.get_campaign_assets import get_campaign_assets
 from functions.get_asset_id_and_list import get_asset_id_list 
 from functions.get_skus_and_stores import get_skus_and_stores 
 from functions.get_baseline_historical_stats import get_baseline_historical_stats 
-from functions.percentage_of_stores_with_fewer_than_12_weeks_historical_sales import percentage_of_stores_with_fewer_than_12_weeks_historical_sales
+#from functions.percentage_of_stores_with_fewer_than_12_weeks_historical_sales import percentage_of_stores_with_fewer_than_12_weeks_historical_sales
 from functions.get_campaign_period_transactions import get_campaign_period_transactions
-from functions.get_test_stores import get_test_stores
-from functions.get_historical_data_for_store_matching import get_historical_data_for_store_matching
+from functions.get_combinatorial_historical_sales import get_combinatorial_historical_sales
 from functions.store_matching import store_matching
-from functions.exclude_test_stores_from_control_group import exclude_test_stores_from_control_group
-from functions.filter_campaign_period_transactions_to_only_test_and_control_stores import filter_campaign_period_transactions_to_only_test_and_control_stores
 
 # locally defined analysis functions 
 from functions.calculate_store_level_posterior_distributions_of_sum_of_sales import calculate_store_level_posterior_distributions_of_sum_of_sales
@@ -49,7 +46,9 @@ for campaign_id in campaign_ids_list:
     # Bakery Campaign Digital Screen Assets 
     check = client.query(
         f"""          
-        SELECT * FROM cart-dai-sandbox-nonprod-c3e7.{data_scientist}.regularization_process_campaign_asset_info ORDER BY media_start_date;
+        SELECT * 
+        FROM cart-dai-sandbox-nonprod-c3e7.{data_scientist}.regularization_process_campaign_asset_info 
+        ORDER BY media_start_date;
          """
     ).result()
     check_df = check.to_dataframe()
@@ -73,10 +72,10 @@ for campaign_id in campaign_ids_list:
     matched_pairs = store_matching(historical_performance_df)
     merged_df = fit_posterior_sum_of_campaign_week_sales(data_scientist, campaign_id, matched_pairs, transactions_df)
 
-    # merged_df.to_csv(f"../Match Maker/new_metric/{campaign_id}_merged_df.csv")
-    # matched_pairs.to_csv(f"../Match Maker/new_metric/{campaign_id}_merged_df.csv_matched_pairs.csv")
-    # merged_df = pd.read_csv("../Match Maker/new_metric/{campaign_id}_merged_df.csv")
-    # matched_pairs = pd.read_csv("../Match Maker/new_metric/{campaign_id}_merged_df.csv_matched_pairs.csv")
+    merged_df.to_csv(f"./outputs/posterior_campaign_sums/{campaign_id}_merged_df.csv")
+    matched_pairs.to_csv(f"./outputs/matched_pairs/{campaign_id}_matched_pairs.csv")
+    # merged_df = pd.read_csv(f"./outputs/posterior_campaign_sums/{campaign_id}_merged_df.csv")
+    # matched_pairs = pd.read_csv(f"./outputs/matched_pairs/{campaign_id}_matched_pairs.csv")
     # matched_pairs = matched_pairs[matched_pairs['abs_perc_diff'] <= 0.06]
 
     trace, summary_df, unique_pairs = run_model(merged_df, matched_pairs, metric="zscore_perc_diff")
@@ -95,8 +94,8 @@ for campaign_id in campaign_ids_list:
     print("Aggregate metrics df: ")
     print(aggregate_metrics_df)
     
-    summary_model_df.to_csv(f"./outputs/{campaign_id}_summary_model_df.csv", index=False)
-    aggregate_metrics_df.to_csv(f"./outputs/{campaign_id}_aggregate_metrics_df.csv", index=False)
+    summary_model_df.to_csv(f"./outputs/results/{campaign_id}_summary_model_df.csv", index=False)
+    aggregate_metrics_df.to_csv(f"./outputs/results/{campaign_id}_aggregate_metrics_df.csv", index=False)
     chime.success() 
     chime.success() 
     chime.success() 
